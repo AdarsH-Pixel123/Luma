@@ -1,4 +1,4 @@
-# 📱 LUMA: Lightweight Unified Mobile Architecture for Smartphone Hybrid ISP
+# LUMA: Lightweight Unified Mobile Architecture for Smartphone Hybrid ISP
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
@@ -8,7 +8,7 @@
 
 ---
 
-## 🏛️ System Architecture
+##  System Architecture
 
 Modern mobile ISPs must balance image quality with strict thermal, memory bandwidth, and latency budgets on NPUs/DSPs. Pure deep learning ISPs (e.g. full PyNET) are too compute-heavy (>50 GFLOPs), while classical ISPs fail in extreme noise and non-linear lighting.
 
@@ -44,7 +44,7 @@ Degraded Bayer RAW (H, W)
 
 ---
 
-## 📂 Repository Structure
+##  Repository Structure
 
 ```text
 CV Hackathon/
@@ -91,7 +91,7 @@ CV Hackathon/
 
 ---
 
-## ⚡ Model Efficiency & Profiling Benchmarks
+##  Model Efficiency & Profiling Benchmarks
 
 Benchmarked on CPU (mobile device simulation):
 
@@ -104,7 +104,7 @@ Benchmarked on CPU (mobile device simulation):
 
 ---
 
-## 🚀 Quickstart & Usage
+##  Quickstart & Usage
 
 ### 0. Launch Production Web Studio (Modern Minimalist UI)
 Launch the full interactive production frontend with real-time before/after split comparator, 400% zoom loupe, live telemetry, and stage inspection:
@@ -160,7 +160,7 @@ output_rgb = adaptive_isp.process(raw_bayer_mosaic)
 
 ---
 
-## 📊 Evaluation Metrics Supported
+##  Evaluation Metrics Supported
 - **PSNR (Peak Signal-to-Noise Ratio)**: Overall signal reconstruction accuracy.
 - **SSIM (Structural Similarity Index)**: High-frequency texture and structural fidelity.
 - **CIE $\Delta E_{00}$ (Delta E 2000)**: Perceptual color accuracy in CIELAB space under D65 illuminant.
