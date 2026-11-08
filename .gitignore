@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large Datasets (Do NOT commit 3.8 GB to git)
+data/
+
+# Caches & Temporary Directories
+.matplotlib_cache/
+.pytest_cache/
+.ipynb_checkpoints/
+*.tmp
+
+# Checkpoint training logs & temp weights (Keep best weights, ignore partials if desired)
+# checkpoints/*.pth is kept for immediate out-of-the-box demo execution
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Output test artifacts
+outputs/*.png
+!outputs/color_chart_comparison.png
+

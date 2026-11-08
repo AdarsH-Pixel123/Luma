@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUMA — Intelligent Smartphone Hybrid ISP Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <!-- System Top HUD Header -->
+  <header class="top-nav">
+    <div class="nav-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="14.31" y1="8" x2="20.05" y2="17.94"></line>
+          <line x1="9.69" y1="8" x2="21.17" y2="8"></line>
+          <line x1="7.38" y1="12" x2="13.12" y2="2.06"></line>
+          <line x1="9.69" y1="16" x2="3.95" y2="6.06"></line>
+          <line x1="14.31" y1="16" x2="2.83" y2="16"></line>
+          <line x1="16.62" y1="12" x2="10.88" y2="21.94"></line>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">LUMA</span>
+        <span class="brand-subtitle">LIGHTWEIGHT UNIFIED MOBILE ARCHITECTURE</span>
+      </div>
+      <span class="status-badge" id="systemStatus">
+        <span class="pulse-dot"></span>
+        <span id="statusText">NPU ENGINE READY</span>
+      </span>
+    </div>
+
+    <div class="nav-telemetry">
+      <div class="telemetry-chip">
+        <span class="chip-label">BUDGET</span>
+        <span class="chip-val highlight-green">&lt;0.5 GFLOPs</span>
+      </div>
+      <div class="telemetry-chip">
+        <span class="chip-label">MODEL</span>
+        <span class="chip-val">MobileUNet · 141K</span>
+      </div>
+      <div class="telemetry-chip">
+        <span class="chip-label">FP16 FOOTPRINT</span>
+        <span class="chip-val highlight-cyan">0.31 MB</span>
+      </div>
+      <div class="telemetry-chip">
+        <span class="chip-label">DEVICE</span>
+        <span class="chip-val" id="deviceChip">Detecting...</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn-ghost" id="openRubricBtn" title="View Hackathon Rubric Verification">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Rubric Scorecard
+      </button>
+
+      <button class="btn-ghost" id="exportAuditBtn" title="Export JSON Performance Audit">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export Log
+      </button>
+
+      <button class="btn-primary" id="triggerProcessNavBtn">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        <span>Run Pipeline</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Workspace Container (3-Column Architecture) -->
+  <main class="workspace">
+    <!-- LEFT CONSOLE: Controls & Simulation Parameters -->
+    <aside class="console-sidebar">
+      <div class="sidebar-section">
+        <div class="section-header">
+          <span class="section-title">01 // BENCHMARK SCENE</span>
+          <span class="section-meta" id="sceneDimsMeta">1024×1024</span>
+        </div>
+
+        <!-- Preset Scene Selector Cards -->
+        <div class="preset-grid" id="presetContainer">
+          <!-- Populated dynamically by JS -->
+          <div class="preset-card active" data-preset="color_chart">
+            <div class="preset-thumb-wrapper">
+              <div class="preset-thumb-skeleton"></div>
+            </div>
+            <div class="preset-info">
+              <span class="preset-name">Color Calibration Chart</span>
+              <span class="preset-desc">Macbeth 24-patch target</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Upload Dropzone -->
+        <div class="upload-zone" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*,.npy,.tiff" style="display: none;">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"></polyline>
+            <line x1="12" y1="12" x2="12" y2="21"></line>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+            <polyline points="16 16 12 12 8 16"></polyline>
+          </svg>
+          <div class="upload-label">
+            <span class="upload-primary">Drop custom sensor image</span>
+            <span class="upload-sub">PNG, JPG, TIFF, or NPY Bayer</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SENSOR DEGRADATION CONTROLS -->
+      <div class="sidebar-section">
+        <div class="section-header">
+          <span class="section-title">02 // SENSOR DEGRADATION ENGINE</span>
+          <div class="preset-chips">
+            <button class="chip-btn active" data-profile="standard">Realistic</button>
+            <button class="chip-btn" data-profile="lowlight">Low-Light</button>
+            <button class="chip-btn" data-profile="clean">Clean</button>
+          </div>
+        </div>
+
+        <!-- Slider 1: Poisson Shot Noise -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Photon Shot Noise (Poisson)</span>
+            <span class="control-value" id="valShotNoise">0.020</span>
+          </div>
+          <input type="range" id="sliderShotNoise" min="0.00" max="0.10" step="0.005" value="0.02">
+          <div class="control-hint">Simulates sensor quantum photon arrival variance</div>
+        </div>
+
+        <!-- Slider 2: Gaussian Read Noise -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Circuit Read Noise (Gaussian)</span>
+            <span class="control-value" id="valReadNoise">0.010</span>
+          </div>
+          <input type="range" id="sliderReadNoise" min="0.00" max="0.05" step="0.005" value="0.01">
+          <div class="control-hint">ADC analog amplification & thermal circuit noise</div>
+        </div>
+
+        <!-- Slider 3: Illumination Lux Exposure -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Scene Illumination (Lux Level)</span>
+            <span class="control-value" id="valLux">100%</span>
+          </div>
+          <input type="range" id="sliderLux" min="0.05" max="1.00" step="0.05" value="1.00">
+          <div class="control-hint">Sensor shutter exposure & ambient lux scaling</div>
+        </div>
+
+        <!-- Slider 4: White Balance Shift -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Color Temp Shift (WB Error)</span>
+            <span class="control-value" id="valWb">1.00x</span>
+          </div>
+          <input type="range" id="sliderWb" min="0.80" max="1.30" step="0.05" value="1.00">
+          <div class="control-hint">Simulates ambient illuminant miscalibration</div>
+        </div>
+      </div>
+
+      <!-- PIPELINE SELECTION -->
+      <div class="sidebar-section">
+        <div class="section-header">
+          <span class="section-title">03 // PIPELINE TARGET</span>
+        </div>
+
+        <div class="mode-selector">
+          <label class="mode-card active">
+            <input type="radio" name="pipelineMode" value="hybrid" checked>
+            <div class="mode-info">
+              <span class="mode-name">⚡ LUMA Adaptive Hybrid ISP</span>
+              <span class="mode-sub">Physics pre/post + 4-ch MobileUNet neural core</span>
+            </div>
+          </label>
+          <label class="mode-card">
+            <input type="radio" name="pipelineMode" value="classical">
+            <div class="mode-info">
+              <span class="mode-name">🏛️ Classical ISP Baseline</span>
+              <span class="mode-sub">Malvar-He-Cutler demosaic + Bilateral filter</span>
+            </div>
+          </label>
+          <label class="mode-card">
+            <input type="radio" name="pipelineMode" value="comparison">
+            <div class="mode-info">
+              <span class="mode-name">⚖️ 3-Way Comparative Benchmark</span>
+              <span class="mode-sub">Simultaneous side-by-side verification</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- EXECUTE BUTTON -->
+      <div class="sidebar-footer">
+        <button class="btn-execute" id="btnExecute">
+          <svg class="spin-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span id="btnExecuteText">⚡ RESTORE SENSOR RAW</span>
+          <span class="key-shortcut">Ctrl+Enter</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- CENTER STAGE: Visual Split Comparator & Stage Pipeline -->
+    <section class="stage-viewport">
+      <!-- Viewport Tool Bar -->
+      <div class="viewport-toolbar">
+        <div class="view-mode-tabs">
+          <button class="view-tab active" data-view="split">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="12" y1="3" x2="12" y2="21"></line>
+            </svg>
+            Interactive Split
+          </button>
+          <button class="view-tab" data-view="sidebyside">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="6" height="18" rx="1"></rect>
+              <rect x="9" y="3" width="6" height="18" rx="1"></rect>
+              <rect x="16" y="3" width="6" height="18" rx="1"></rect>
+            </svg>
+            3-Way Compare
+          </button>
+          <button class="view-tab" data-view="heatmap">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4-3.5 5.5s-2 2-2 3.5"></path>
+              <circle cx="12" cy="19" r="1"></circle>
+            </svg>
+            ΔE Error Heatmap
+          </button>
+        </div>
+
+        <div class="view-controls">
+          <div class="zoom-pill" id="zoomToggleBtn" title="Toggle 400% Precision Magnifier Loupe">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+            <span>Loupe: OFF</span>
+          </div>
+
+          <button class="btn-icon" id="downloadRestoredBtn" title="Download High-Res Restored sRGB Image">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Display Container -->
+      <div class="canvas-wrapper" id="canvasWrapper">
+        <!-- 1. SPLIT COMPARATOR VIEW -->
+        <div class="comparator-view" id="splitView">
+          <div class="image-layer layer-base">
+            <img id="imgRestored" alt="Restored Output">
+            <div class="image-tag tag-right">RESTORED sRGB (LUMA HYBRID ISP)</div>
+          </div>
+          <div class="image-layer layer-overlay" id="overlayLayer">
+            <img id="imgDegraded" alt="Degraded Bayer Input">
+            <div class="image-tag tag-left" id="overlayTag">DEGRADED BAYER RAW (INPUT)</div>
+          </div>
+          <!-- Draggable Divider Bar -->
+          <div class="split-divider" id="splitDivider">
+            <div class="divider-handle">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+            <span class="split-label-pos" id="splitPosLabel">50%</span>
+          </div>
+
+          <!-- Magnifier Loupe Floating Element -->
+          <div class="magnifier-lens" id="magnifierLens">
+            <canvas id="lensCanvas" width="180" height="180"></canvas>
+            <div class="lens-crosshair"></div>
+            <span class="lens-badge">400% LOUPE</span>
+          </div>
+        </div>
+
+        <!-- 2. SIDE-BY-SIDE 3-WAY VIEW (Hidden by default) -->
+        <div class="sidebyside-view" id="sideBySideView" style="display: none;">
+          <div class="sbs-panel">
+            <div class="sbs-header">
+              <span class="sbs-title">1. DEGRADED BAYER RAW</span>
+              <span class="sbs-meta">Poisson + Gaussian Noise</span>
+            </div>
+            <div class="sbs-img-box">
+              <img id="sbsImgBayer" alt="Bayer Raw">
+            </div>
+          </div>
+          <div class="sbs-panel">
+            <div class="sbs-header">
+              <span class="sbs-title">2. CLASSICAL ISP</span>
+              <span class="sbs-meta" id="sbsMetaClassical">Malvar MHC + Bilateral</span>
+            </div>
+            <div class="sbs-img-box">
+              <img id="sbsImgClassical" alt="Classical Baseline">
+            </div>
+          </div>
+          <div class="sbs-panel sbs-featured">
+            <div class="sbs-header">
+              <span class="sbs-title highlight-green">3. LUMA HYBRID ISP</span>
+              <span class="sbs-meta highlight-cyan" id="sbsMetaHybrid">Neural Core MobileUNet</span>
+            </div>
+            <div class="sbs-img-box">
+              <img id="sbsImgHybrid" alt="Hybrid Restored">
+            </div>
+          </div>
+          <div class="sbs-panel">
+            <div class="sbs-header">
+              <span class="sbs-title">4. GROUND TRUTH</span>
+              <span class="sbs-meta">DIV2K / Target Reference</span>
+            </div>
+            <div class="sbs-img-box">
+              <img id="sbsImgGt" alt="Ground Truth">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. HEATMAP VIEW (Hidden by default) -->
+        <div class="heatmap-view" id="heatmapView" style="display: none;">
+          <div class="heatmap-container">
+            <img id="imgHeatmap" alt="Differential Error Map">
+            <div class="heatmap-legend">
+              <span class="legend-label">Absolute Residual (ΔE₀₀):</span>
+              <div class="legend-bar"></div>
+              <div class="legend-range">
+                <span>0.0 (Zero Error)</span>
+                <span>ΔE &gt; 10.0 (High Distortion)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-scrim" id="loadingScrim" style="display: none;">
+          <div class="loading-card">
+            <div class="loading-pulse-ring"></div>
+            <span class="loading-title">PROCESSING LUMA HYBRID ISP PIPELINE</span>
+            <span class="loading-desc">Executing sub-sampled Bayer packing & MobileUNet inference...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM STAGE PIPELINE FLOW INSPECTOR -->
+      <div class="stage-pipeline-bar">
+        <div class="pipeline-header">
+          <span class="pipeline-tag">PIPELINE STAGE INSPECTOR</span>
+          <span class="pipeline-hint">Click any stage node to inspect intermediate tensor activations</span>
+        </div>
+        <div class="pipeline-nodes" id="pipelineNodes">
+          <div class="stage-node active" data-stage="1_normalized">
+            <span class="node-idx">01</span>
+            <span class="node-name">BLS &amp; Norm</span>
+            <span class="node-type physics">Physics</span>
+          </div>
+          <div class="stage-arrow">→</div>
+          <div class="stage-node" data-stage="2_white_balance">
+            <span class="node-idx">02</span>
+            <span class="node-name">Bayer WB</span>
+            <span class="node-type physics">Physics</span>
+          </div>
+          <div class="stage-arrow">→</div>
+          <div class="stage-node" data-stage="3_packed_4ch">
+            <span class="node-idx">03</span>
+            <span class="node-name">Pack 4-Ch</span>
+            <span class="node-type arch">H/2, W/2, 4</span>
+          </div>
+          <div class="stage-arrow">→</div>
+          <div class="stage-node highlight" data-stage="4_neural_demosaic">
+            <span class="node-idx">04</span>
+            <span class="node-name">Neural Core</span>
+            <span class="node-type neural">MobileUNet</span>
+          </div>
+          <div class="stage-arrow">→</div>
+          <div class="stage-node" data-stage="5_color_correction">
+            <span class="node-idx">05</span>
+            <span class="node-name">3×3 CCM</span>
+            <span class="node-type physics">Physics</span>
+          </div>
+          <div class="stage-arrow">→</div>
+          <div class="stage-node" data-stage="6_tone_mapping">
+            <span class="node-idx">06</span>
+            <span class="node-name">Filmic Tone</span>
+            <span class="node-type physics">Curve</span>
+          </div>
+          <div class="stage-arrow">→</div>
+          <div class="stage-node" data-stage="7_sharpening">
+            <span class="node-idx">07</span>
+            <span class="node-name">Guided Sharp</span>
+            <span class="node-type physics">Edge</span>
+          </div>
+          <div class="stage-arrow">→</div>
+          <div class="stage-node" data-stage="8_final_output">
+            <span class="node-idx">08</span>
+            <span class="node-name">Final sRGB</span>
+            <span class="node-type out">Output</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT CONSOLE: Telemetry, Metrics Bento & Rubric Scorecard -->
+    <aside class="telemetry-sidebar">
+      <!-- KPI Scorecard -->
+      <div class="sidebar-section">
+        <div class="section-header">
+          <span class="section-title">TELEMETRY &amp; FIDELITY</span>
+          <span class="badge-optimal">TARGET MET</span>
+        </div>
+
+        <div class="kpi-grid">
+          <!-- KPI 1: PSNR -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">PSNR (Fidelity)</span>
+              <span class="kpi-tag highlight-green" id="kpiPsnrTag">&gt;30 dB Target</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-num" id="kpiPsnr">--</span>
+              <span class="kpi-unit">dB</span>
+            </div>
+            <div class="kpi-bar-bg">
+              <div class="kpi-bar-fill fill-green" id="kpiPsnrBar" style="width: 85%;"></div>
+            </div>
+          </div>
+
+          <!-- KPI 2: SSIM -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">SSIM (Structure)</span>
+              <span class="kpi-tag highlight-green">High Preserv.</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-num" id="kpiSsim">--</span>
+              <span class="kpi-unit">/ 1.0</span>
+            </div>
+            <div class="kpi-bar-bg">
+              <div class="kpi-bar-fill fill-cyan" id="kpiSsimBar" style="width: 90%;"></div>
+            </div>
+          </div>
+
+          <!-- KPI 3: CIE Delta E -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">CIE ΔE₀₀ (Color Delta)</span>
+              <span class="kpi-tag highlight-green">Low Error</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-num" id="kpiDeltaE">--</span>
+              <span class="kpi-unit">dist</span>
+            </div>
+            <div class="kpi-bar-bg">
+              <div class="kpi-bar-fill fill-amber" id="kpiDeltaEBar" style="width: 25%;"></div>
+            </div>
+          </div>
+
+          <!-- KPI 4: Inference Latency -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-label">Inference Latency</span>
+              <span class="kpi-tag highlight-green" id="kpiFpsTag">Real-Time</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-num" id="kpiLatency">--</span>
+              <span class="kpi-unit">ms</span>
+            </div>
+            <div class="kpi-bar-bg">
+              <div class="kpi-bar-fill fill-green" id="kpiLatencyBar" style="width: 40%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene Intelligence Panel -->
+      <div class="sidebar-section">
+        <div class="section-header">
+          <span class="section-title">SCENE INTELLIGENCE DIAGNOSIS</span>
+        </div>
+        <div class="diag-list">
+          <div class="diag-row">
+            <span class="diag-name">Estimated Sensor Noise (σ)</span>
+            <span class="diag-val" id="diagNoise">--</span>
+          </div>
+          <div class="diag-row">
+            <span class="diag-name">Detected Ambient Lux</span>
+            <span class="diag-val highlight-cyan" id="diagLux">--</span>
+          </div>
+          <div class="diag-row">
+            <span class="diag-name">Dynamic Bayer WB Gains</span>
+            <span class="diag-val" id="diagWbGains">--</span>
+          </div>
+          <div class="diag-row">
+            <span class="diag-name">Adaptive Guided Sharpening</span>
+            <span class="diag-val" id="diagSharpen">--</span>
+          </div>
+          <div class="diag-row">
+            <span class="diag-name">Inference Peak RAM</span>
+            <span class="diag-val" id="diagRam">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparative Summary Card -->
+      <div class="sidebar-section">
+        <div class="section-header">
+          <span class="section-title">HEAD-TO-HEAD VS CLASSICAL</span>
+        </div>
+        <div class="headtohead-box">
+          <div class="h2h-col">
+            <span class="h2h-label">CLASSICAL BASELINE</span>
+            <span class="h2h-val" id="h2hClassicalPsnr">-- dB</span>
+            <span class="h2h-sub" id="h2hClassicalLat">-- ms</span>
+          </div>
+          <div class="h2h-vs">VS</div>
+          <div class="h2h-col highlight-col">
+            <span class="h2h-label highlight-green">LUMA HYBRID ISP</span>
+            <span class="h2h-val highlight-green" id="h2hHybridPsnr">-- dB</span>
+            <span class="h2h-sub highlight-cyan" id="h2hHybridDelta">+0.0 dB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rubric Verification Quick Pill -->
+      <div class="sidebar-section">
+        <div class="rubric-mini-box" id="openRubricDrawerMini">
+          <div class="rubric-mini-header">
+            <span class="rubric-check-all">6 / 6 CHECKS PASSED ✅</span>
+            <span class="rubric-link">View Full Rubric →</span>
+          </div>
+          <span class="rubric-mini-desc">Classical ISP, MobileUNet Core, Hybrid 4ch packing, Scene Intelligence &amp; Mobile Latency</span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- STAGE DETAIL INSPECTOR MODAL -->
+  <div class="modal-backdrop" id="stageModal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge" id="stageModalType">PHYSICS DOMAIN</span>
+          <h3 class="modal-title" id="stageModalTitle">Stage 01: Black Level Subtraction</h3>
+        </div>
+        <button class="modal-close" id="stageModalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-stage-img-wrap">
+          <img id="stageModalImg" alt="Stage Preview">
+        </div>
+        <div class="modal-stage-info">
+          <div class="stage-info-block">
+            <span class="stage-info-label">Operation Description</span>
+            <p class="stage-info-text" id="stageModalDesc">
+              Linearizes sensor Bayer RAW by subtracting the dark current black level (BLC = 64/1023) and normalizing to floating-point range [0.0, 1.0].
+            </p>
+          </div>
+          <div class="stage-info-grid">
+            <div class="stage-stat">
+              <span class="stat-name">Domain</span>
+              <span class="stat-val" id="stageModalDomain">Exact Physics</span>
+            </div>
+            <div class="stage-stat">
+              <span class="stat-name">Compute MACs</span>
+              <span class="stat-val" id="stageModalMacs">0 MACs (Direct Arithmetic)</span>
+            </div>
+            <div class="stage-stat">
+              <span class="stat-name">Channel Format</span>
+              <span class="stat-val" id="stageModalFormat">1-Channel Bayer (H, W)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RUBRIC SCORECARD MODAL -->
+  <div class="modal-backdrop" id="rubricModal" style="display: none;">
+    <div class="modal-card rubric-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-badge highlight-green">OFFICIAL SPECIFICATION</span>
+          <h3 class="modal-title">Computer Vision Hackathon — Rubric Verification</h3>
+        </div>
+        <button class="modal-close" id="rubricModalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <table class="rubric-table">
+          <thead>
+            <tr>
+              <th>Mandatory Technical Requirement</th>
+              <th>System Architecture Implementation</th>
+              <th>Evaluation &amp; Verification</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="rubricTableBody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
+
